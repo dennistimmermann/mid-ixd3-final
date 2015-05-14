@@ -1,0 +1,15 @@
+{
+	"folders":
+	[
+		{
+			"path": "."
+		}
+	],
+	"build_systems":
+	[
+		{
+			"name": "teensy",
+			"shell_cmd": "echo 'building $project_name/$project_name.lua' && /Applications/Arduino.app/Contents/MacOS/Arduino --upload --board teensy:avr:teensy31 --port /dev/tty.usbmodem874821 --verbose-upload $project_path/$project_name/$project_name.ino"
+		}
+	]
+}

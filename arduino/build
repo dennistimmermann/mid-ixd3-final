@@ -1,0 +1,5 @@
+#!/bin/sh
+
+WD="`pwd`"
+
+/Applications/Arduino.app/Contents/MacOS/Arduino --verify --board teensy:avr:teensy31 $WD/lua/lua.ino
