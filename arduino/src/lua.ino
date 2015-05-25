@@ -12,9 +12,16 @@
 // give it a name:
 
 #include "TinyGPS++.h"
+#include "Gps.h"
+
+#include <stack>
+
+using namespace std;
+stack<int> Queue;
+
 int led = 13;
 
-TinyGPSPlus gps;
+Gps gps(&Serial1);
 
 // the setup routine runs once when you press reset:
 void setup() {
@@ -22,25 +29,16 @@ void setup() {
   pinMode(led, OUTPUT);
 
   Serial.begin(9600);
-  Serial1.begin(9600);
-
+  gps.begin(9600);
 }
 
 // the loop routine runs over and over again forever:
 void loop() {
-	if(Serial1.available() > 0) {
-		digitalWrite(led, HIGH);
-		while(Serial1.available() > 0) {
-			gps.encode(Serial1.read());
-		}
-		//Serial.println(gps.failedChecksum());
-		Serial.print(gps.location.lat());
-		Serial.print(" - ");
-		Serial.println(gps.location.lng());
-	}
-	digitalWrite(led, LOW);    // turn the LED off by making the voltage LOW
+	gps.run();
+	//digitalWrite(13, HIGH);
+}
 
-	//Serial.print(" - ");
-	//Serial.println(gps.satellites.value());
-	//delay(1000);
+extern "C"{
+  int _getpid(){ return -1;}
+  int _kill(int pid, int sig){ return -1; }
 }
