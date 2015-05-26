@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+
+</head>
+<body>
+<canvas width="500" height="500" id="canvas"></canvas>
+<script type="text/javascript">
+
+	var width = 500
+	var height = 500
+
+	var EFFECT_CHARGE = 0x00
+	var EFFECT_LOW_BATTERY = 0x01
+	var EFFECT_HOLD = 0x02
+	var EFFECT_PASS = 0x03
+	var EFFECT_IDLE = 0xFE
+	var EFFECT_OFF = 0xFF
+
+	var NUM_PIXELS = 24
+
+	var cur_effect = EFFECT_OFF
+
+	var speed = 0.0
+	var acceleration = 0.0
+	var fade = 0.0
+	var start = Date.now()
+	var rotation = 0
+
+	var canvas = document.getElementById("canvas")
+	var ctx = canvas.getContext('2d')
+
+	var initial = []
+	var target = []
+	var current = []
+	var rotated = []
+
+	for(var i = 0; i < NUM_PIXELS; i++) {
+		initial[i] = {r:0, g:0, b: 0}
+		target[i] = {r:0, g:0, b: 0}
+		current[i] = {r:0, g:0, b: 0}
+		rotated[i] = {r:0, g:0, b: 0}
+	}
+
+	var run = function(timestamp) {
+		var dt = Date.now()-start
+
+		var a = Math.max( ( (fade - dt) / fade), 0)
+		var b = 1 - a
+
+		rotation = rotation + speed
+
+		for(var k = 0; k < NUM_PIXELS; k++) {
+			var i = initial[k]
+			var t = target[k]
+			var c = current[ ((k+rotation)|0 )%NUM_PIXELS ]
+
+			//console.log(c)
+
+			c.r = ( (a * i.r) + (b * t.r) )
+			c.g = ( (a * i.g) + (b * t.g) )
+			c.b = ( (a * i.b) + (b * t.b) )
+		}
+
+		for(var l = 0; l < NUM_PIXELS; l++) {
+			var p = current[l%NUM_PIXELS]
+			var t = rotated[l%NUM_PIXELS]
+			var n = current[(l+1)%NUM_PIXELS]
+
+			//console.log(t)
+
+			var perc = rotation - (rotation|0)
+			//console.log(perc)
+
+			t.r = ( (perc * p.r) + ( (1-perc) * n.r ) )|0
+			t.g = ( (perc * p.g) + ( (1-perc) * n.g ) )|0
+			t.b = ( (perc * p.b) + ( (1-perc) * n.b ) )|0
+		}
+
+
+		//console.log(a*initial[0].b, b*target[0].b)
+
+	}
+
+	var setEffect = function(effect) {
+		initial = current.map(function(e, i, arr) {
+			return e
+		})
+
+		cur_effect = effect
+	}
+
+	var doTest = function() {
+		setFadingSpeed(1000)
+		setRotationSpeed(0.02)
+		start = Date.now()
+
+		for(var i = 0; i < NUM_PIXELS; i++) {
+			var p = target[i]
+			p.b = 255
+		}
+		target[6].b = 0
+		target[5].b = 0
+		target[4].b = 0
+		target[3].b = 50
+		target[2].b = 100
+		target[1].b = 150
+		target[0].b = 200
+	}
+
+	var setRotationSpeed = function(s) {
+		speed = s
+	}
+
+	var setRotationAcceleration = function(a) {
+		acceleration = a
+	}
+
+	var setFadingSpeed = function(f) {
+		fade = f
+	}
+
+	var resetTransform = function(ctx) {
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		ctx.setTransform(1, 0, 0, 1, 0, 0)
+		ctx.translate(250,250)
+	}
+
+	var drawCircle = function(ctx, x, y, r, R, G, B) {
+		ctx.beginPath()
+		ctx.arc(x, y, r, 0, 2*Math.PI, false)
+		ctx.fillStyle = "rgb("+R+","+G+","+B+")"
+		ctx.fill()
+		ctx.closePath()
+	}
+
+	var draw = function(timestamp) {
+		resetTransform(ctx)
+		for(var i = 0; i < NUM_PIXELS; i++) {
+			var pixel = rotated[i]
+			drawCircle(ctx, 0, -200, 20, pixel.r, pixel.g, pixel.b)
+			ctx.rotate(2*Math.PI / NUM_PIXELS)
+		}
+
+	}
+
+	var loop = function(timestamp) {
+		run(timestamp)
+		draw(timestamp)
+		window.requestAnimationFrame(loop)
+	}
+
+	window.requestAnimationFrame(loop)
+
+
+	</script>
+</body>
+</html>
