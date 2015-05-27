@@ -31,7 +31,7 @@
 	var start = Date.now()
 	var rotation = 0
 
-	var charge = 20
+	var charge = 100
 	var last_charge = 0
 
 	var canvas = document.getElementById("canvas")
@@ -55,7 +55,7 @@
 
 	var run = function() {
 		//console.log("run")
-		setFadingSpeed(5000)
+		setFadingSpeed(1000)
 		if(cur_effect == EFFECT_CHARGE && last_charge != charge) {
 			setInitial()
 			console.log("doing charge")
@@ -65,8 +65,10 @@
 
 			for(var i = 0; i < NUM_PIXELS; i++) {
 				var p = target[i]
-				p.b = 24/(i+1) * (charge+8) * 12 - 1024
-				p.b = Math.max(Math.min(p.b, 255), 0)
+				//p.b = 24.0/(i+1) * (charge+8) * 3.0 - 127
+				//p.b = Math.max(Math.min(p.b, 255), 0)
+				p.r = 127
+				p.g = 127
 			}
 		}
 		calc()

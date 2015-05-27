@@ -13,7 +13,12 @@
 
 #include "Effects.h"
 
-Effects lights();
+int charge = 10;
+int last_charge = 0;
+
+elapsedMillis counter;
+
+Effects *lights = new Effects();
 
 // the setup routine runs once when you press reset:
 void setup() {
@@ -23,10 +28,25 @@ void setup() {
   }
 
   Serial.begin(9600);
+  lights->setEffect(EFFECT_HOLD);
 }
 
 // the loop routine runs over and over again forever:
 void loop() {
-	lights.run();
+  if(Serial.available() > 0) {
+    while(Serial.available() > 0) {
+      Serial.read();
+    }
+    lights->setEffect(EFFECT_CHARGE);
+    lights->charge = lights->charge +10;
+  }
+
+  if(counter > 200) {
+    counter = counter - 200;
+    //lights->charge = lights->charge+1;
+  }
+
+
+	lights->run();
 	//digitalWrite(13, HIGH);
 }
