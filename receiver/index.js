@@ -12,6 +12,25 @@ app.use(bodyParser.json())
 
 var url = 'mongodb://192.168.99.100:32769/jupiter'
 
+var calculateDistance = function(lat1, lng1, lat2, lng2){
+	var R = 6371; //Radius of earth in km
+	var dLat = toRad(lat2-lat1);//toRad(location2.lat()-location1.lat());
+	var dLon = toRad(lng2-lng1);
+	var dLat1 = toRad(lat1);
+	var dLat2 = toRad(lat2);
+	var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+	        Math.cos(dLat1) * Math.cos(dLat1) *
+	        Math.sin(dLon/2) * Math.sin(dLon/2);
+	var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+	distance = R * c; //Distance in km
+
+}
+
+var toRad = function(Value) {
+    /** Converts numeric degrees to radians */
+    return Value * Math.PI / 180;
+}
+
 app.get('/', function(req, res) {
 	res.send('Hello World')
 })

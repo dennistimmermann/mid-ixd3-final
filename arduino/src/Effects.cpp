@@ -100,7 +100,7 @@ void Effects::calc() {
 
 	//rotation = fmod(rotation + (rotationTimer/-100.0), NUM_PIXELS); //rotationspeed
 
-	rotation = fmod((fmod(rotation + (rotationTimer/-10.0), NUM_PIXELS) + NUM_PIXELS), NUM_PIXELS);
+	rotation = fmod((fmod(rotation + (rotationTimer/-100.0), NUM_PIXELS) + NUM_PIXELS), NUM_PIXELS);
 	rotationTimer = 0;
 
 	//fade

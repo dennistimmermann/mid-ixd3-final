@@ -23,12 +23,13 @@ Effects *lights = new Effects();
 // the setup routine runs once when you press reset:
 void setup() {
   // initialize the digital pin as an output.
-  while(!Serial) {
-    ;
-  }
+  // while(!Serial) {
+  //   ;
+  // }
 
   Serial.begin(9600);
-  lights->setEffect(EFFECT_HOLD);
+  lights->setEffect(EFFECT_CHARGE);
+  lights->charge = 30;
 }
 
 // the loop routine runs over and over again forever:
@@ -38,7 +39,7 @@ void loop() {
       Serial.read();
     }
     lights->setEffect(EFFECT_CHARGE);
-    lights->charge = lights->charge +10;
+    lights->charge = min(lights->charge +10, 100);
   }
 
   if(counter > 200) {
