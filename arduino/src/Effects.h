@@ -9,6 +9,7 @@
 #define EFFECT_HOLD 0x02
 #define EFFECT_PASS 0x03
 #define EFFECT_TWINKLE 0x04
+#define EFFECT_FLASH 0x05
 #define EFFECT_IDLE 0xFE
 #define EFFECT_OFF 0xFF
 
@@ -21,12 +22,19 @@ struct color {
 	int b;
 };
 
+struct pixelData {
+	double fade;
+	elapsedMillis fadeTimer;
+	bool finished;
+};
+
 class Effects {
 	color initial[NUM_PIXELS];
 	color target[NUM_PIXELS];
 	color faded[NUM_PIXELS];
 	color rotated[NUM_PIXELS];
 	color smoothed[NUM_PIXELS];
+	pixelData meta[NUM_PIXELS];
 
 	double target_speed;
 	int cur_effect;
@@ -36,7 +44,9 @@ class Effects {
 	bool _called;
 
 	double rotation;
+	double rotationSpeed;
 	elapsedMillis rotationTimer;
+	elapsedMillis twinkleTimer;
 
 	int _step;
 
@@ -53,6 +63,7 @@ public:
 	bool step(int, uint);
 	bool step(int);
 	void gotoStep(int);
+	void setPixelTarget(int, int, int, int, double);
 	void setPixelTarget(int, int, int, int);
 	//void setRotationSpeed(double speed);
 	//void setRotationAcceleration(double acceleration);

@@ -26,9 +26,9 @@ void setup() {
   // while(!Serial) {
   //   ;
   // }
-
+  randomSeed(1);
   Serial.begin(9600);
-  lights->setEffect(EFFECT_CHARGE);
+  lights->setEffect(EFFECT_TWINKLE);
   lights->charge = 30;
 }
 
@@ -38,8 +38,8 @@ void loop() {
     while(Serial.available() > 0) {
       Serial.read();
     }
-    lights->setEffect(EFFECT_CHARGE);
-    lights->charge = min(lights->charge +10, 100);
+    lights->setEffect(EFFECT_FLASH);
+    //lights->charge = min(lights->charge +10, 100);
   }
 
   if(counter > 200) {

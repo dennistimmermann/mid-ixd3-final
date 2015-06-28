@@ -15,6 +15,7 @@ Effects::Effects() {
 		faded[i] = {0,0,0};
 		rotated[i] = {0,0,0};
 		smoothed[i] = {0,0,0};
+		meta[i] = {500, 0, false};
 	}
 
 	target_speed = 0.0;
@@ -22,6 +23,7 @@ Effects::Effects() {
 
 	fade = 5000;
 	rotation = 0;
+	rotationSpeed = 0.0;
 
 	charge = 0;
 	last_charge = -1;
@@ -31,6 +33,7 @@ Effects::Effects() {
 
 	leds.begin();
 	leds.show();
+	//setInitial();
 }
 
 void Effects::run() {
@@ -38,6 +41,7 @@ void Effects::run() {
 		if(last_charge != charge) {
 			setFadeSpeed(5000);
 			Serial.println("charge");
+			rotationSpeed = 1;
 
 			last_charge = charge;
 
@@ -47,9 +51,12 @@ void Effects::run() {
 				target[i].r = ( 1-(charge/100.0) ) * intensity;
 				target[i].g = (charge/100.0) * intensity;
 				target[i].b = 0;
+				meta[i].fade = 5000;
+				meta[i].finished = false;
+				meta[i].fadeTimer = 0;
 			}
 
-			setInitial();
+			//setInitial();
 
 			//for(int i = 0; i < NUM_PIXELS; i++) {
 			//	target[i].r = 255;
@@ -85,26 +92,62 @@ void Effects::run() {
 		if( step(4) ) {
 			gotoStep(0);
 		}
+	} else if(cur_effect == EFFECT_FLASH) {
+		if(step(0, 500)) {
+			for(int i = 0; i < NUM_PIXELS; i++) {
+				setPixelTarget(i, 255, 255, 255, 500);
+			}
+		}
+		if(step(1, 500)) {
+			for(int i = 0; i < NUM_PIXELS; i++) {
+				setPixelTarget(i, 0, 0, 0, 2000);
+			}
+		}
+		if(step(2)) {
+			setEffect(EFFECT_TWINKLE);
+		}
 	} else if(cur_effect == EFFECT_TWINKLE) {
+		//setFadeSpeed(1000);
 
+		if(twinkleTimer > 50) {
+			int n = random(0, 23);
+			setPixelTarget(n, 255, 255, 255, 250);
+			twinkleTimer = 0;
+		}
+		for(int i = 0; i < NUM_PIXELS; i++) {
+			if(meta[i].finished == true) {
+				setPixelTarget(i, 0, 0, 0, 1750);
+			}
+		}
+		// if(faded[1].r >= 127) {
+		// 	Serial.println("wat");
+		// 	setPixelTarget(1, 0, 0, 0, 2000);
+		// }
 	}
 	calc();
 	draw();
 }
 
 void Effects::calc() {
-	double a = max( (fade-fadeTimer) /fade, 0.0);
-	double b = 1.0 - a;
 
 	//Serial.println(a);
 
 	//rotation = fmod(rotation + (rotationTimer/-100.0), NUM_PIXELS); //rotationspeed
 
-	rotation = fmod((fmod(rotation + (rotationTimer/-100.0), NUM_PIXELS) + NUM_PIXELS), NUM_PIXELS);
+	rotation = fmod((fmod(rotation + rotationSpeed * (rotationTimer/-100.0), NUM_PIXELS) + NUM_PIXELS), NUM_PIXELS);
 	rotationTimer = 0;
 
 	//fade
 	for(int i = 0; i < NUM_PIXELS; i++) {
+
+		double a = max( (meta[i].fade-meta[i].fadeTimer) /meta[i].fade, 0.0);
+		double b = 1.0 - a;
+
+		if(meta[i].fadeTimer > meta[i].fade) {
+			meta[i].finished = true;
+			Serial.println("finished");
+		}
+
 		faded[i].r = ( a * initial[i].r ) + ( b * target[i].r);
 		faded[i].g = ( a * initial[i].g ) + ( b * target[i].g);
 		faded[i].b = ( a * initial[i].b ) + ( b * target[i].b);
@@ -129,11 +172,25 @@ void Effects::calc() {
 	//Serial.println( fmod(rotation, NUM_PIXELS));
 }
 
-void Effects::setPixelTarget(int num, int r, int g, int b) {
+void Effects::setPixelTarget(int num, int r, int g, int b, double fade) {
 	target[num].r = r;
 	target[num].g = g;
 	target[num].b = b;
+
+	meta[num].fadeTimer = 0;
+	meta[num].fade = fade;
+	meta[num].finished = false;
+
+	initial[num].r = faded[num].r;
+	initial[num].g = faded[num].g;
+	initial[num].b = faded[num].b;
 }
+
+void Effects::setPixelTarget(int num, int r, int g, int b) {
+	setPixelTarget(num, r, g, b, 500);
+}
+
+
 
 void Effects::draw() {
 	for(int i = 0; i < NUM_PIXELS; i++) {
