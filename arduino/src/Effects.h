@@ -10,6 +10,7 @@
 #define EFFECT_PASS 0x03
 #define EFFECT_TWINKLE 0x04
 #define EFFECT_FLASH 0x05
+#define EFFECT_SOLID 0x06
 #define EFFECT_IDLE 0xFE
 #define EFFECT_OFF 0xFF
 
@@ -52,6 +53,11 @@ class Effects {
 
 public:
 	int charge;
+	int energy;
+	int solidR;
+	int solidG;
+	int solidB;
+	int colorIndex;
 	int last_charge;
 	Effects();
 	void run();
