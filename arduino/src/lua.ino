@@ -12,19 +12,13 @@
 // give it a name:
 
 #include "Effects.h"
+#include "Com.h"
+#include "Handoff.h"
 
-int charge = 10;
-int last_charge = 0;
+//Effects *lights = new Effects();
+Com com(&Serial2);
+Handoff handoff(&com);
 
-elapsedMillis counter;
-
-Effects *lights = new Effects();
-int touchReading = 0;
-bool touched = false;
-int touchStep = 0;
-bool stepped = false;
-
-int colorCounter = 0;
 
 // the setup routine runs once when you press reset:
 void setup() {
@@ -32,64 +26,24 @@ void setup() {
   // while(!Serial) {
   //   ;
   // }
-  randomSeed(1);
+  pinMode(13, OUTPUT);
+
   Serial.begin(9600);
-  lights->setEffect(EFFECT_TWINKLE);
-  lights->charge = 30;
+  com.begin(9600);
+
 }
 
 // the loop routine runs over and over again forever:
 void loop() {
-  if(Serial.available() > 0) {
-    while(Serial.available() > 0) {
+  if(Serial.available()) {
+    while(Serial.available()) {
       Serial.read();
-    }
-    lights->setEffect(EFFECT_FLASH);
-    //lights->charge = min(lights->charge +10, 100);
+    };
+    Serial.write("simulating handoff");
+    handoff.doIt();
+    //char data[] = "{\"lat\":52.286947,\"lon\":8.026087,\"timestamp\":\"1436118312\",\"bia\":\"666\"}";
+    //com.http_post(data);
   }
-
-  touchReading = touchRead(23);
-  if(touchReading > 4000 && touched == false) {
-    touched = true;
-    stepped = false;
-    touchStep = (touchStep+1)%5;
-  } else if(touchReading < 2000 && touched == true) {
-    touched = false;
-  }
-
-  if(stepped == false) {
-    stepped = true;
-    if(touchStep == 0) {
-      // lights->colorIndex = (lights->colorIndex+1)%5;
-      lights->energy = 10;
-      lights->setEffect(EFFECT_TWINKLE);
-    }
-    if(touchStep == 1) {
-      lights->colorIndex = (lights->colorIndex+1)%5;
-      lights->energy = 100;
-      lights->setEffect(EFFECT_FLASH);
-    }
-    if(touchStep == 2) {
-      lights->energy = 25;
-      lights->setEffect(EFFECT_TWINKLE);
-    }
-    if(touchStep == 3) {
-      lights->colorIndex = (lights->colorIndex+1)%5;
-      lights->energy = 100;
-      lights->setEffect(EFFECT_FLASH);
-    }
-    if(touchStep == 4) {
-      lights->energy = 100;
-      counter = 0;
-      lights->setEffect(EFFECT_FLASH);
-    }
-  }
-
-  if(touchStep == 4) {
-    lights->energy = max(100-(counter/250), 5);
-  }
-
-  Serial.println(touchReading);
-	lights->run();
+  com.run();
 	//digitalWrite(13, HIGH);
 }
