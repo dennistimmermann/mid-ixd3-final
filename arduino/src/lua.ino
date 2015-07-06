@@ -15,9 +15,10 @@
 #include "Com.h"
 #include "Handoff.h"
 
-//Effects *lights = new Effects();
+Effects *lights = new Effects();
 Com com(&Serial2);
 Handoff handoff(&com);
+//Effects lights();
 
 
 // the setup routine runs once when you press reset:
@@ -30,6 +31,7 @@ void setup() {
 
   Serial.begin(9600);
   com.begin(9600);
+  lights->setEffect(EFFECT_FLASH);
 
 }
 
@@ -40,6 +42,7 @@ void loop() {
       Serial.read();
     };
     Serial.write("simulating handoff");
+    lights->setEffect(EFFECT_TWINKLE);
     handoff.doIt();
     //char data[] = "{\"lat\":52.286947,\"lon\":8.026087,\"timestamp\":\"1436118312\",\"bia\":\"666\"}";
     //com.http_post(data);
