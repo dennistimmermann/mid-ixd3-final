@@ -58,7 +58,7 @@ app.post('/data', function(req, res) {
 			console.log('*', 'mongodb connected')
 
 			var col = db.collection('positions')
-
+			req.body.timestamp = Date.now()/1000
 			col.insert(req.body, function(err, result) {
 				if(err) return res.status(500).json(err).end()
 				console.log(result)

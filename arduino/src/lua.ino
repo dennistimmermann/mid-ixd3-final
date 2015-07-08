@@ -11,13 +11,16 @@
 // Pin 13 has the LED on Teensy 3.0
 // give it a name:
 
-#include "Effects.h"
+#include "EffectsController.h"
 #include "Com.h"
 #include "Handoff.h"
 
-Effects *lights = new Effects();
-Com com(&Serial2);
-Handoff handoff(&com);
+EffectsController lights(&Serial3);
+Com com(&Serial2, &lights);
+Handoff handoff(&com, &lights);
+
+elapsedMillis effectThrottle;
+elapsedMillis handoffThrottle;
 //Effects lights();
 
 
@@ -28,25 +31,24 @@ void setup() {
   //   ;
   // }
   pinMode(13, OUTPUT);
-
+  randomSeed(1);
   Serial.begin(9600);
+  lights.begin(9600);
   com.begin(9600);
-  lights->setEffect(EFFECT_FLASH);
+  lights.setEffect(EFFECT_OFF);
 
 }
 
 // the loop routine runs over and over again forever:
 void loop() {
-  if(Serial.available()) {
-    while(Serial.available()) {
-      Serial.read();
-    };
-    Serial.write("simulating handoff");
-    lights->setEffect(EFFECT_TWINKLE);
-    handoff.doIt();
-    //char data[] = "{\"lat\":52.286947,\"lon\":8.026087,\"timestamp\":\"1436118312\",\"bia\":\"666\"}";
-    //com.http_post(data);
-  }
+
   com.run();
+
+  if(!com.isCharging()) {
+    if(handoffThrottle > 2000) {
+      handoffThrottle = 0;
+      handoff.run();
+    }
+  }
 	//digitalWrite(13, HIGH);
 }

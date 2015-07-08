@@ -1,0 +1,16 @@
+{
+	"folders":
+	[
+		{
+			"path": "."
+		}
+	],
+	"build_systems":
+	[
+		{
+			"working_dir": "${project_path:${folder}}",
+			"name": "teensy",
+			"shell_cmd": "platformio run --target upload"
+		}
+	]
+}

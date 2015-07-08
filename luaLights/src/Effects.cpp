@@ -2,7 +2,7 @@
 #include <Adafruit_NeoPixel.h>
 #include <Arduino.h>
 
-Adafruit_NeoPixel leds = Adafruit_NeoPixel(24, 1, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel leds = Adafruit_NeoPixel(24, 2, NEO_GRB + NEO_KHZ800);
 
 int scale(int in, int max, double scale) {
 	return pow(in, scale)/(pow(max, scale)/max);
@@ -27,14 +27,24 @@ const uint8_t correction[] = {
   215,218,220,223,225,228,231,233,236,239,241,244,247,249,252,255 };
 
 const color colorTable[] = {
-	{47,126,157},
-	{145,58,223},
-	{24,192,174},
-	{129,228,249},
-	{223,29,170}
+	{255,255,0},
+	{254,153,0},
+	{255,0,204},
+	{204,0,255},
+	{154,0,255},
+	{43,43,147},
+	{0,153,255},
+	{0,204,255},
+	{0,255,255},
+	{0,255,192},
+	{188,250,79},
+	{96,227,255},
+	{253,125,0},
+	{0,60,255},
+	{195,142,255}
 };
 
-Effects::Effects() {
+Effects::Effects(void) {
 	for(int i = 0; i < NUM_PIXELS; i++) {
 		initial[i] = {0,0,0};
 		target[i] = {0,0,0};
@@ -46,18 +56,20 @@ Effects::Effects() {
 
 	target_speed = 0.0;
 	cur_effect = EFFECT_OFF;
+	prev_effect = EFFECT_OFF;
 
 	fade = 5000;
 	rotation = 0;
 	rotationSpeed = 0.0;
 
-	charge = 0;
+	charge = 1;
 	energy = 100;
 	last_charge = -1;
 
-	solidR = 0;
-	solidG = 0;
-	solidB = 0;
+	targetColor = {255,255,255};
+	prev_color = {255,255,255};
+
+	ranEffect = false;
 
 	colorIndex = 0;
 
@@ -70,9 +82,20 @@ Effects::Effects() {
 }
 
 void Effects::run() {
-	if(cur_effect == EFFECT_CHARGE) {
+	// if(energyTimer > ENERGY_DRAIN_TIME) {
+	// 	energyTimer = 0;
+	// 	energy = max(energy - 1, 10);
+	// }
+
+	if(cur_effect == EFFECT_OFF) {
+		cur_effect = EFFECT_LIMBO;
+		rotationSpeed = 0;
+		Serial.println("do off");
+		for(int i = 0; i < NUM_PIXELS; i++) {
+			setPixelTarget(i, 1, 1, 1, 250);
+		}
+	} else if(cur_effect == EFFECT_CHARGE) {
 		if(last_charge != charge) {
-			setFadeSpeed(5000);
 			Serial.println("charge");
 			rotationSpeed = 1;
 
@@ -81,12 +104,16 @@ void Effects::run() {
 			for(int i = 0; i < NUM_PIXELS; i++) {
 				int intensity = constrain((int)(24.0/(i+1) * (charge+8) * 4.0 - 200), 0, 255);
 
-				target[i].r = ( 1-(charge/100.0) ) * intensity;
-				target[i].g = (charge/100.0) * intensity;
-				target[i].b = 0;
-				meta[i].fade = 5000;
-				meta[i].finished = false;
-				meta[i].fadeTimer = 0;
+				// target[i].r = ( 1-(charge/100.0) ) * intensity;
+				// target[i].g = (charge/100.0) * intensity;
+				// target[i].b = 0;
+				// meta[i].fade = 5000;
+				// meta[i].finished = false;
+				// meta[i].fadeTimer = 0;
+				int r = ( 1-(charge/100.0) ) * intensity;
+				int g = (charge/100.0) * intensity;
+				int b = 0;
+				setPixelTarget(i, r, g, b, 5000);
 			}
 
 			//setInitial();
@@ -97,57 +124,77 @@ void Effects::run() {
 			//target[0].r = 255;
 		}
 	} else if(cur_effect == EFFECT_HOLD) {
-		Serial.println(fadeTimer);
+		rotationSpeed = 0;
 		if( step(0, 1000) ) {
 			Serial.println("hell");
 			for(int i = 0; i < NUM_PIXELS; i++) {
-				target[i].r = 96;
+				//target[i].r = 96;
+				setPixelTarget(i, targetColor.r/2, targetColor.g/2, targetColor.b/2, 1000);
 			}
 		}
-		if( step(1, 500) ) {
+		if( step(1, 1200) ) {
 			Serial.println("dunkel");
 			for(int i = 0; i < NUM_PIXELS; i++) {
-				target[i].r = 48;
+				setPixelTarget(i, targetColor.r/5, targetColor.g/5, targetColor.b/5, 1200);
 			}
 		}
 		if( step(2, 750) ) {
 			Serial.println("dunkel");
 			for(int i = 0; i < NUM_PIXELS; i++) {
-				target[i].r = 86;
+				setPixelTarget(i, targetColor.r/3, targetColor.g/3, targetColor.b/3, 750);
 			}
 		}
 		if( step(3, 1000) ) {
 			Serial.println("dunkel");
 			for(int i = 0; i < NUM_PIXELS; i++) {
-				target[i].r = 48;
+				setPixelTarget(i, targetColor.r/5, targetColor.g/5, targetColor.b/5, 1000);
 			}
 		}
 		if( step(4) ) {
 			gotoStep(0);
 		}
+	} else if(cur_effect == EFFECT_LOW) {
+		rotationSpeed = 0;
+		if( step(0, 2000) ) {
+			for(int i = 0; i < NUM_PIXELS; i++) {
+				//target[i].r = 96;
+				setPixelTarget(i, 100, 0, 0, 2000);
+			}
+		}
+		if( step(1, 2000) ) {
+			for(int i = 0; i < NUM_PIXELS; i++) {
+				setPixelTarget(i, 2, 0, 0, 2000);
+			}
+		}
+		if( step(2) ) {
+			gotoStep(0);
+		}
 	} else if(cur_effect == EFFECT_FLASH) {
+		rotationSpeed = 0;
 		if(step(0, 500)) {
 			for(int i = 0; i < NUM_PIXELS; i++) {
 				//setPixelTarget(i, 255, 255, 255, 500);
-				setPixelTarget(i, colorTable[colorIndex].r, colorTable[colorIndex].g, colorTable[colorIndex].b, 500);
+				setPixelTarget(i, targetColor.r, targetColor.g, targetColor.b, 500);
 			}
 		}
 		if(step(1, 1500)) {
 			for(int i = 0; i < NUM_PIXELS; i++) {
 				//setPixelTarget(i, 128, 128, 128, 2000);
-				setPixelTarget(i, colorTable[colorIndex].r/2, colorTable[colorIndex].g/2, colorTable[colorIndex].b/2, 2000);
+				setPixelTarget(i, targetColor.r/2, targetColor.g/2, targetColor.b/2, 2000);
 			}
 		}
 		if(step(2)) {
+			//targetColor = prev_color;
 			setEffect(EFFECT_TWINKLE);
 		}
 	} else if(cur_effect == EFFECT_TWINKLE) {
+		rotationSpeed = 0;
 		//setFadeSpeed(1000);
 
 		if(twinkleTimer > (5000/energy) )  {
 			int n = random(0, 23);
 			//setPixelTarget(n, 255, 255, 255, (25000/energy) );
-			setPixelTarget(n, colorTable[colorIndex].r, colorTable[colorIndex].g, colorTable[colorIndex].b, (25000/energy) );
+			setPixelTarget(n, targetColor.r, targetColor.g, targetColor.b, (25000/energy) );
 			twinkleTimer = 0;
 		}
 		for(int i = 0; i < NUM_PIXELS; i++) {
@@ -161,7 +208,7 @@ void Effects::run() {
 		// }
 	} else if(cur_effect == EFFECT_SOLID) {
 		for(int i = 0; i < NUM_PIXELS; i++) {
-			setPixelTarget(i, solidR, solidG, solidB, 1);
+			setPixelTarget(i, targetColor.r, targetColor.g, targetColor.b, 1);
 		}
 	}
 	calc();
@@ -252,9 +299,27 @@ void Effects::draw() {
 }
 
 void Effects::setEffect(int effect) {
+	Serial.print("effect:");
+	Serial.println(effect);
+	ranEffect = false;
 	gotoStep(0);
 	setInitial();
+	last_charge = -1;
+	rotationSpeed = 1;
+	prev_effect = cur_effect;
 	cur_effect = effect;
+}
+
+void Effects::setEffect(int effect, color c) {
+	prev_color = targetColor;
+	targetColor = c;
+	setEffect(effect);
+}
+
+void Effects::setEffect(int effect, int r, int g, int b) {
+	prev_color = targetColor;
+	targetColor = {r, g, b};
+	setEffect(effect);
 }
 
 void Effects::setInitial() {
@@ -263,7 +328,7 @@ void Effects::setInitial() {
 		initial[i].g = faded[i].g;
 		initial[i].b = faded[i].b;
 	}
-	fadeTimer = 0;
+	//fadeTimer = 0;
 }
 
 void Effects::setFadeSpeed(double fadespeed) {
@@ -298,3 +363,43 @@ void Effects::gotoStep(int s) {
 	_step = s;
 	durTimer = 0;
 }
+
+void Effects::userChange() {
+	energy = 100;
+	color tmp = targetColor;
+	do {
+		targetColor = colorTable[random(0, 14)];
+	} while (targetColor.r == tmp.r && targetColor.g == tmp.g && targetColor.b == targetColor.b);
+	prev_color = targetColor;
+	prev_effect = EFFECT_TWINKLE;
+	setEffect(EFFECT_FLASH);
+}
+
+void Effects::userLeft() {
+	setEffect(EFFECT_HOLD);
+}
+
+void Effects::batteryLow() {
+	setEffect(EFFECT_LOW);
+}
+
+void Effects::flash(int r, int g, int b) {
+	targetColor = {r, g, b};
+	setEffect(EFFECT_FLASH);
+}
+
+void Effects::setTargetColor(int r, int g, int b) {
+	targetColor = {r, g, b};
+}
+
+void Effects::setEnergy(int _energy) {
+	energy = energy;
+}
+
+void Effects::setCharge(int _charge) {
+	charge = _charge-30;
+}
+
+// void Effects::flash(color c) {
+// 	flash(c.r, c.g, c.b);
+// }

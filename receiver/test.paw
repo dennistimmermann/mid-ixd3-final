@@ -62,19 +62,19 @@
     </databaseInfo>
     <object type="LMREQUEST" id="z102">
         <attribute name="uuid" type="string">0EBF42A2-C306-4761-BF3D-F650FDAAD9B4</attribute>
-        <attribute name="url" type="string">http://localhost:3000/data</attribute>
+        <attribute name="url" type="string">http://51bb0063.ngrok.com/write</attribute>
         <attribute name="storecookies" type="bool">1</attribute>
         <attribute name="sendcookies" type="bool">1</attribute>
         <attribute name="redirectmethod" type="bool">0</attribute>
         <attribute name="redirectauthorization" type="bool">0</attribute>
         <attribute name="method" type="string">POST</attribute>
         <attribute name="followredirects" type="bool">0</attribute>
-        <attribute name="body" type="string">[{"data":{"json":"{\\"lat\\":52.286947,\\"lon\\":8.026087,\\"timestamp\\":\\"[{\\\\\\"data\\\\\\":{\\\\\\"format\\\\\\":1,\\\\\\"customFormat\\\\\\":\\\\\\"\\\\\\",\\\\\\"now\\\\\\":true,\\\\\\"useTSeparator\\\\\\":1,\\\\\\"date\\\\\\":1431257541.858037,\\\\\\"delta\\\\\\":0,\\\\\\"useZForUTC\\\\\\":0},\\\\\\"identifier\\\\\\":\\\\\\"com.luckymarmot.TimestampDynamicValue\\\\\\"}]\\",\\"bia\\":\\"[{\\\\\\"data\\\\\\":{\\\\\\"useUppercaseLetters\\\\\\":0,\\\\\\"length\\\\\\":3,\\\\\\"useDigits\\\\\\":1,\\\\\\"useHexDigits\\\\\\":0,\\\\\\"useASCIISymbols\\\\\\":0,\\\\\\"useLowercaseLetters\\\\\\":0},\\\\\\"identifier\\\\\\":\\\\\\"com.luckymarmot.NonceDynamicValue\\\\\\"}]\\"}"},"identifier":"com.luckymarmot.JSONDynamicValue"}]</attribute>
+        <attribute name="body" type="string">[{"data":{"json":"{\\"lat\\":52.286947,\\"lon\\":8.026087\\/*,\\"timestamp\\":\\"[{\\\\\\"data\\\\\\":{\\\\\\"format\\\\\\":1,\\\\\\"customFormat\\\\\\":\\\\\\"\\\\\\",\\\\\\"now\\\\\\":true,\\\\\\"useTSeparator\\\\\\":1,\\\\\\"date\\\\\\":1431257541.858037,\\\\\\"delta\\\\\\":0,\\\\\\"useZForUTC\\\\\\":0},\\\\\\"identifier\\\\\\":\\\\\\"com.luckymarmot.TimestampDynamicValue\\\\\\"}]\\",\\"bia\\":\\"[{\\\\\\"data\\\\\\":{\\\\\\"useUppercaseLetters\\\\\\":0,\\\\\\"length\\\\\\":3,\\\\\\"useDigits\\\\\\":1,\\\\\\"useHexDigits\\\\\\":0,\\\\\\"useASCIISymbols\\\\\\":0,\\\\\\"useLowercaseLetters\\\\\\":0},\\\\\\"identifier\\\\\\":\\\\\\"com.luckymarmot.NonceDynamicValue\\\\\\"}]\\"*\\/}"},"identifier":"com.luckymarmot.JSONDynamicValue"}]</attribute>
         <attribute name="order" type="int64">0</attribute>
         <attribute name="name" type="string">My API</attribute>
         <relationship name="parent" type="0/1" destination="LMREQUESTTREEITEM"></relationship>
         <relationship name="children" type="0/0" destination="LMREQUESTTREEITEM"></relationship>
-        <relationship name="headers" type="0/0" destination="LMKEYVALUE" idrefs="z107 z104"></relationship>
+        <relationship name="headers" type="0/0" destination="LMKEYVALUE" idrefs="z104 z107"></relationship>
     </object>
     <object type="LMCOOKIEJAR" id="z103">
         <attribute name="uuid" type="string">4A0F4447-82BC-4B9A-ADBB-15B2F01BEA3D</attribute>

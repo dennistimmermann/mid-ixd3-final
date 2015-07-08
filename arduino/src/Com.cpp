@@ -1,10 +1,12 @@
 #include "Com.h"
+#include "EffectsController.h"
+//#include <string.h>
 #include <Adafruit_FONA.h>
 
-#define URL "http://38bab1d1.ngrok.com/data"
+#define URL "http://51bb0063.ngrok.com/write"
 
 #define FONA_RST 4
-#define FONA_CHARGE 20
+#define FONA_CHARGE 14
 #define FONA_KEY 5
 #define FONA_PS 6
 
@@ -15,16 +17,18 @@ int8_t gpsFix = 0;
 
 char PIN[] = {'2','5','4','1'};
 
-Com::Com(HardwareSerial * ser) {
+Com::Com(HardwareSerial * ser, EffectsController * _lights) {
 	serial = ser;
 
 	pinMode(FONA_PS, INPUT);
 	pinMode(FONA_KEY, OUTPUT);
-	pinMode(FONA_CHARGE, INPUT_PULLUP);
+	pinMode(FONA_CHARGE, INPUT);
 
 	digitalWrite(FONA_KEY, HIGH);
 	position = {0,0,0,0,0,0};
 	charging = false;
+
+	lights = _lights;
 }
 
 void Com::begin(int baud) {
@@ -51,7 +55,7 @@ void Com::http_post(char* data) {
 		Serial.println(F("Failed to turn on"));
 	}
 	if (!gsm.HTTP_POST_start(URL, F("application/json"), (uint8_t *) data, strlen(data), &statuscode, (uint16_t *)&length)) {
-		Serial.println("Failed!");
+		Serial.println("hard failed Failed!");
   	}
 	while (length > 0) {
 		while (gsm.available()) {
@@ -82,8 +86,35 @@ void Com::unlock() {
 	}
 }
 
-void Com::send() {
+bool Com::send() {
+	int8_t gpsStatus = gsm.GPSstatus();
+	if(gpsStatus < 2) {
+		lights->flash(255, 0, 0);	//no gps
+		return false;
+	}
+	if(!gsm.getGPS(&position.lat, &position.lon, &position.speed, &position.heading, &position.altitude)) {
+		Serial.println("... failed");
+		lights->flash(0, 0, 255);
+	}
+	Serial.print(position.lat);
+	Serial.print(" - WATWAT - ");
+	Serial.println(position.lon);
 
+	char lat[10];
+	char lon[10];
+	char ndata[80];
+
+	dtostrf(position.lat, 10, 6, lat);
+	dtostrf(position.lon, 10, 6, lon);
+
+	sprintf(ndata, "{\"lat\":%s,\"lon\":%s}", lat, lon);
+
+	http_post(ndata);
+	Serial.println("should have senden");
+	Serial.println(ndata);
+	Serial.println(lat);
+
+	return false;
 }
 
 bool Com::connect() {
@@ -113,15 +144,15 @@ void Com::checkGPS() {
 		//flash;
 	}
 	if(gpsStatus >= 2) {
+		digitalWrite(13, HIGH);
 		Serial.println(". updating GPS position...");
 		if(!gsm.getGPS(&position.lat, &position.lon, &position.speed, &position.heading, &position.altitude)) {
 			Serial.println("... failed");
 		}
-		Serial.print(position.lat);
-		Serial.print(" - ");
-		Serial.println(position.lon);
+
 	}
 }
+
 
 void Com::run() {
 	if(networkStatusTimer>5000) {
@@ -139,11 +170,34 @@ void Com::run() {
 		checkGPS();
 	}
 
-	if(analogRead(FONA_CHARGE) < 1000) {
-		digitalWrite(13, LOW);
-		charging = false;
-	} else {
-		digitalWrite(13, HIGH);
-		charging = true;
+	if(chargeTimer > 2000) {
+		uint16_t charge;
+		gsm.getBattPercent(&charge);
+
+		if (analogRead(FONA_CHARGE) > 1022) {
+			//digitalWrite(13, HIGH);
+			if(charging == false) {
+				Serial.println("statechange 1");
+				lights->setCharge(charge);
+				lights->setEffect(EFFECT_CHARGE);
+			}
+			charging = true;
+		} else {
+			//digitalWrite(13, LOW);
+			if(charging == true) {
+				Serial.println("statechange 2");
+				lights->setEffect(EFFECT_OFF);
+			}
+			charging = false;
+		}
+		if(charge < 10) {
+			lights->batteryLow();
+		}
 	}
+
+
+}
+
+bool Com::isCharging() {
+	return charging;
 }
